@@ -249,6 +249,10 @@ async def run():
             if size is not None and size > file_limit:
                 return
             async with semaphore:
+                # The visitor may have pressed /stop or /forget while this
+                # download waited for a semaphore slot.
+                if not db.dm_is_active(user_id):
+                    return
                 if shutil.disk_usage(cfg.data_dir).free < cfg.min_free_mb * 1024 * 1024:
                     return
                 folder = media_root / 'bot_dm' / str(user_id)
