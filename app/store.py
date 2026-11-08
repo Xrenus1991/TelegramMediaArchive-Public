@@ -242,6 +242,9 @@ class Store:
         timestamp = now()
         with self.db:
             self.db.execute("BEGIN IMMEDIATE")
+            # Consent may be withdrawn after the event handler's initial check.
+            if not self.can_archive(chat_id):
+                return False
             cur = self.db.execute(
                 "INSERT OR IGNORE INTO messages(chat_id,message_id,sender_id,peer_scope,text,received_at) "
                 "VALUES(?,?,?,?,?,?)",
