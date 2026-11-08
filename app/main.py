@@ -94,6 +94,9 @@ async def run():
                 folder = media_root / str(chat_id)
                 folder.mkdir(parents=True, exist_ok=True)
                 target = folder / str(message.id)
+                # Only remove files created by this attempt; a prior valid
+                # archive file must never be deleted after a retry failure.
+                target_existed = target.exists()
                 try:
                     downloaded = await asyncio.wait_for(
                         message.download_media(file=str(target)), timeout=900
@@ -120,6 +123,8 @@ async def run():
                     LOG.info("Saved %s: chat=%s message=%s bytes=%s",
                              kind, chat_id, message.id, actual_size)
                 except Exception:
+                    if not target_existed and target.is_file() and not target.is_symlink():
+                        target.unlink(missing_ok=True)
                     LOG.exception("Media download failed: chat=%s message=%s", chat_id, message.id)
         finally:
             pending_downloads.discard(token)
