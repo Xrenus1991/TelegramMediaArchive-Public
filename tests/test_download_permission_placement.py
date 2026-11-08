@@ -24,12 +24,20 @@ class DownloadPermissionPlacementTests(unittest.TestCase):
                     checks.append(node.lineno)
                 elif func.value.id == "message" and func.attr == "download_media":
                     downloads.append(node.lineno)
-                elif func.value.id == "db" and func.attr == "save":
+                elif func.value.id == "db" and func.attr == "save_if_allowed":
                     saves.append(node.lineno)
         self.assertEqual(len(downloads), 1)
         self.assertEqual(len(saves), 1)
         self.assertTrue(any(line < downloads[0] for line in checks))
         self.assertTrue(any(downloads[0] < line < saves[0] for line in checks))
+        # The final write must also be guarded within Store's transaction.
+        store_tree = ast.parse((Path(__file__).resolve().parents[1] / "app" / "store.py").read_text())
+        guarded = next(n for n in ast.walk(store_tree)
+                       if isinstance(n, ast.FunctionDef) and n.name == "save_if_allowed")
+        self.assertTrue(any(
+            isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+            and n.func.attr == "can_archive" for n in ast.walk(guarded)
+        ))
 
 
 if __name__ == "__main__":

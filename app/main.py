@@ -129,8 +129,12 @@ async def run():
                             path.unlink(missing_ok=True)
                         LOG.info("Discarded downloaded media after archival permission changed: chat=%s", chat_id)
                         return
-                    db.save(chat_id, message.id, message.sender_id, kind,
-                            str(path.relative_to(media_root)), actual_size)
+                    if not db.save_if_allowed(chat_id, message.id, message.sender_id, kind,
+                                           str(path.relative_to(media_root)), actual_size):
+                        if not target_existed and path.is_file() and not path.is_symlink():
+                            path.unlink(missing_ok=True)
+                        LOG.info("Discarded media after archival consent changed: chat=%s", chat_id)
+                        return
                     LOG.info("Saved %s: chat=%s message=%s bytes=%s",
                              kind, chat_id, message.id, actual_size)
                 except Exception:

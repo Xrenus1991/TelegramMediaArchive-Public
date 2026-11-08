@@ -215,6 +215,16 @@ class Store:
              deleted["deleted_at"] if deleted else None),
         )
 
+    def save_if_allowed(self, chat_id: int, message_id: int, sender_id: int | None,
+                        kind: str, relative: str, size: int) -> bool:
+        """Atomically recheck archive consent before saving downloaded media."""
+        with self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            if not self.can_archive(chat_id):
+                return False
+            self.save(chat_id, message_id, sender_id, kind, relative, size)
+            return True
+
     def ignore(self, chat_id: int, message_id: int, reason: str):
         self.db.execute(
             "INSERT OR IGNORE INTO ignored(chat_id,message_id,reason,received_at) VALUES(?,?,?,?)",
