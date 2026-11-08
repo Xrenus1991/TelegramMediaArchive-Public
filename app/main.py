@@ -83,6 +83,11 @@ async def run():
                 db.ignore(chat_id, message.id, "file exceeds configured limit")
                 return
             async with semaphore:
+                # The transfer may have waited in the semaphore queue after
+                # consent was revoked. Do not start a new download in that case.
+                if not db.can_archive(chat_id):
+                    LOG.info("Skipped media download after archival permission changed: chat=%s", chat_id)
+                    return
                 if shutil.disk_usage(cfg.data_dir).free < cfg.min_free_mb * 1024 * 1024:
                     db.ignore(chat_id, message.id, "insufficient free disk space")
                     return
