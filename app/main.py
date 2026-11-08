@@ -98,6 +98,11 @@ async def run():
                 # Only remove files created by this attempt; a prior valid
                 # archive file must never be deleted after a retry failure.
                 target_existed = target.exists()
+                if target_existed:
+                    # Never overwrite an existing target on a retry; its
+                    # provenance cannot be established from this event.
+                    LOG.warning("Skipped media download: target already exists for chat=%s message=%s", chat_id, message.id)
+                    return
                 try:
                     downloaded = await asyncio.wait_for(
                         message.download_media(file=str(target)), timeout=900
@@ -118,7 +123,10 @@ async def run():
                         return
                     # Consent may have been withdrawn while Telegram was downloading.
                     if not db.can_archive(chat_id):
-                        path.unlink(missing_ok=True)
+                        # Do not unlink a file that predated this attempt:
+                        # a queued retry must not destroy an older archive.
+                        if not target_existed and path.is_file() and not path.is_symlink():
+                            path.unlink(missing_ok=True)
                         LOG.info("Discarded downloaded media after archival permission changed: chat=%s", chat_id)
                         return
                     db.save(chat_id, message.id, message.sender_id, kind,
