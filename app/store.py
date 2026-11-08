@@ -252,6 +252,10 @@ class Store:
         """
         with self.db:
             self.db.execute("BEGIN IMMEDIATE")
+            # The handler's consent check is not sufficient if permission
+            # changes before the write transaction begins.
+            if not self.can_archive(chat_id):
+                return False
             row = self.db.execute(
                 "SELECT id,text,telegram_deleted FROM messages WHERE chat_id=? AND message_id=?",
                 (chat_id, message_id),
