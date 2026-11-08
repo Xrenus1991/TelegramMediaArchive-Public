@@ -58,7 +58,8 @@ async def run():
         """Capture new messages from either client; deduplicate across both."""
         chat_id = event.chat_id
         message = event.message
-        if chat_id is None or message is None:
+        if chat_id is None or message is None or not db.can_archive(chat_id):
+            # Events already queued when consent changes must not capture text.
             return
         kind = kind_of(message)
         reason = restricted_reason(message)
