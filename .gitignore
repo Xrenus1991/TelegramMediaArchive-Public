@@ -1,0 +1,66 @@
+.env
+*.session*
+data/
+__pycache__/
+*.sqlite*
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.session
+*.session-journal
+*.key
+*.pem
+
+# Databases and archives
+*.db
+*.sqlite
+*.sqlite3
+*.zip
+*.tar
+*.tar.gz
+
+# Media and runtime data
+data/
+media/
+downloads/
+backups/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# macOS
+.DS_Store
+._*
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.session
+*.session-journal
+*.key
+*.pem
+
+# Runtime data
+data/
+media/
+downloads/
+backups/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# macOS
+.DS_Store
+._*

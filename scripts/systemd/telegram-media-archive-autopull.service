@@ -1,0 +1,16 @@
+[Unit]
+Description=Telegram Media Archive: pull CI-tested releases from GitHub
+Wants=network-online.target
+After=network-online.target docker.service
+ConditionPathExists=/home/monitor/TelegramMediaArchive_v1/scripts/auto_pull_ready_on_server.sh
+
+[Service]
+Type=oneshot
+User=monitor
+Group=monitor
+WorkingDirectory=/home/monitor/TelegramMediaArchive_v1
+Environment=HOME=/home/monitor
+Environment=GIT_TERMINAL_PROMPT=0
+UMask=0077
+ExecStart=/usr/bin/bash /home/monitor/TelegramMediaArchive_v1/scripts/auto_pull_ready_on_server.sh --run
+TimeoutStartSec=2400

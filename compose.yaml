@@ -1,0 +1,17 @@
+services:
+  archive:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - archive-data:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 512m
+    # No ports or access to the Docker socket. Independent from other projects.
+
+volumes:
+  archive-data:

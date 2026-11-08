@@ -1,0 +1,12 @@
+[Unit]
+Description=Poll GitHub for tested Telegram Media Archive releases
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=10min
+AccuracySec=1min
+RandomizedDelaySec=30s
+Unit=telegram-media-archive-autopull.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+.env
+*.session*
+data/
+__pycache__/
+.git/
+tests/
+
+# Exclude macOS metadata and bytecode
+**/._*
+._*
+**/.DS_Store
+*.pyc
+.pytest_cache/
