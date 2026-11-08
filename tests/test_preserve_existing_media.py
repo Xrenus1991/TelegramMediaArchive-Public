@@ -25,5 +25,20 @@ class PreserveExistingArchiveTests(unittest.TestCase):
         self.assertTrue(cleanup, "revocation cleanup must preserve preexisting targets")
 
 
+    def test_existing_target_returns_before_download(self):
+        tree = ast.parse((Path(__file__).resolve().parents[1] / "app" / "main.py").read_text())
+        handler = next(n for n in ast.walk(tree)
+                       if isinstance(n, ast.AsyncFunctionDef) and n.name == "archive_new")
+        existing = [n for n in ast.walk(handler)
+                    if isinstance(n, ast.If) and isinstance(n.test, ast.Name)
+                    and n.test.id == "target_existed"
+                    and any(isinstance(child, ast.Return) for child in n.body)]
+        downloads = [n for n in ast.walk(handler)
+                     if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                     and n.func.attr == "download_media"]
+        self.assertEqual(len(downloads), 1)
+        self.assertTrue(any(n.lineno < downloads[0].lineno for n in existing))
+
+
 if __name__ == "__main__":
     unittest.main()
