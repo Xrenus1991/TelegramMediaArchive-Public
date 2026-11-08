@@ -118,7 +118,10 @@ async def run():
                         return
                     # Consent may have been withdrawn while Telegram was downloading.
                     if not db.can_archive(chat_id):
-                        path.unlink(missing_ok=True)
+                        # Do not unlink a file that predated this attempt:
+                        # a queued retry must not destroy an older archive.
+                        if not target_existed and path.is_file() and not path.is_symlink():
+                            path.unlink(missing_ok=True)
                         LOG.info("Discarded downloaded media after archival permission changed: chat=%s", chat_id)
                         return
                     db.save(chat_id, message.id, message.sender_id, kind,
