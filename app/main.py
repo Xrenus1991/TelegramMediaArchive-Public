@@ -278,7 +278,8 @@ async def run():
 
     @controller.on(events.MessageEdited())
     async def bot_direct_edited(event):
-        if event.is_private and event.sender_id != owner_id and event.sender_id is not None:
+        if (event.is_private and event.sender_id != owner_id
+            and event.sender_id is not None and db.dm_is_active(event.sender_id)):
             if not restricted_reason(event.message):
                 db.dm_capture_edit(event.sender_id,event.message.id,event.raw_text or "")
 
