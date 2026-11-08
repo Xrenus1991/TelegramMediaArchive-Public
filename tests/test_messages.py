@@ -37,7 +37,16 @@ class MessageArchiveTests(unittest.TestCase):
         self.assertEqual(self.store.message_stats()["texts"], 1)
         self.assertEqual([r["text"] for r in self.store.latest_messages()], ["подпись"])
 
+    def test_edit_rejected_after_consent_revoked(self):
+        self.store.allow(-1, "Тест")
+        self.store.capture_new(-1, 5, 91, "было", "nonchannel")
+        self.assertTrue(self.store.capture_edit(-1, 5, "стало"))
+        self.store.deny(-1)
+        self.assertFalse(self.store.capture_edit(-1, 5, "не сохранять"))
+        self.assertEqual(self.store.get_message(1)["text"], "стало")
+
     def test_edits_preserve_versions_and_no_duplicates(self):
+        self.store.allow(-1, "Тест")
         self.store.capture_new(-1, 5, 91, "было", "nonchannel")
         self.assertTrue(self.store.capture_edit(-1, 5, "стало"))
         self.assertFalse(self.store.capture_edit(-1, 5, "стало"))
