@@ -102,6 +102,8 @@ async def run():
                         message.download_media(file=str(target)), timeout=900
                     )
                     if not downloaded:
+                        if not target_existed and target.is_file() and not target.is_symlink():
+                            target.unlink(missing_ok=True)
                         db.ignore(chat_id, message.id, "download unavailable")
                         return
                     path = Path(downloaded).resolve()
