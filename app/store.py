@@ -159,7 +159,11 @@ class Store:
         )
 
     def set_bot_group_state(self, chat_id: int, state: str) -> bool:
-        if state not in ("pending", "active", "paused", "left"):
+        # Never bypass the group disclosure: only activate_bot_group()
+        # may set 'active', after the notice has been sent successfully.
+        if state == "active":
+            raise ValueError("Use activate_bot_group after successful disclosure")
+        if state not in ("pending", "paused", "left"):
             raise ValueError("Invalid group state")
         cur = self.db.execute(
             "UPDATE bot_groups SET state=?,updated_at=? WHERE chat_id=?",
