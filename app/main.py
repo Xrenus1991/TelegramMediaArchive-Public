@@ -98,6 +98,11 @@ async def run():
                 # Only remove files created by this attempt; a prior valid
                 # archive file must never be deleted after a retry failure.
                 target_existed = target.exists()
+                if target_existed:
+                    # Never overwrite an existing target on a retry; its
+                    # provenance cannot be established from this event.
+                    LOG.warning("Skipped media download: target already exists for chat=%s message=%s", chat_id, message.id)
+                    return
                 try:
                     downloaded = await asyncio.wait_for(
                         message.download_media(file=str(target)), timeout=900
