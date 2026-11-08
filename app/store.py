@@ -306,7 +306,9 @@ class Store:
             for mid in ids:
                 candidates = self.db.execute(
                     "SELECT m.chat_id FROM messages m JOIN watched w ON w.chat_id=m.chat_id "
-                    "WHERE m.message_id=? AND m.peer_scope='nonchannel'", (mid,),
+                    "LEFT JOIN bot_groups b ON b.chat_id=m.chat_id "
+                    "WHERE m.message_id=? AND m.peer_scope='nonchannel' "
+                    "AND (b.state IS NULL OR b.state NOT IN ('paused','left'))", (mid,),
                 ).fetchall()
                 if len(candidates) == 1:
                     count += self._mark_deleted(candidates[0]["chat_id"], [mid])
