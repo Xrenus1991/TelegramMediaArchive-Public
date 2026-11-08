@@ -22,7 +22,19 @@ class MessageArchiveTests(unittest.TestCase):
         self.store.allow(-1, "Тест")
         self.assertTrue(self.store.is_allowed(-1))
 
+    def test_new_message_rejected_after_consent_revoked(self):
+        self.store.allow(-1, "test")
+        self.assertTrue(self.store.capture_new(-1, 1, 91, "before", "nonchannel"))
+        self.store.deny(-1)
+        self.assertFalse(self.store.capture_new(-1, 2, 91, "after", "nonchannel"))
+        self.assertEqual(self.store.message_stats()["total"], 1)
+
+    def test_new_message_requires_consent(self):
+        self.assertFalse(self.store.capture_new(-1, 1, 91, "no consent", "nonchannel"))
+        self.assertEqual(self.store.message_stats()["total"], 0)
+
     def test_new_text_and_idempotency(self):
+        self.store.allow(-1, "test")
         self.assertTrue(self.store.capture_new(-1, 5, 91, "Оригинал", "nonchannel"))
         self.assertFalse(self.store.capture_new(-1, 5, 91, "Подмена", "nonchannel"))
         row = self.store.get_message(1)
@@ -31,6 +43,8 @@ class MessageArchiveTests(unittest.TestCase):
         self.assertEqual([x['text'] for x in self.store.history(1)], ["Оригинал"])
 
     def test_caption_and_empty_text_media(self):
+        self.store.allow(-1, "test")
+        self.store.allow(-2, "test")
         self.store.capture_new(-2, 6, None, "подпись", "channel")
         self.store.capture_new(-2, 7, None, "", "channel")
         self.assertEqual(self.store.message_stats()["total"], 2)
@@ -59,6 +73,7 @@ class MessageArchiveTests(unittest.TestCase):
         self.assertEqual(self.store.message_stats()["total"], 0)
 
     def test_download_finishes_after_deletion(self):
+        self.store.allow(-1, "test")
         self.store.capture_new(-1, 5, 91, "text", "channel")
         self.store.marked_deleted(-1, [5])
         self.store.save(-1, 5, 91, "photo", "-1/5.jpg", 123)
@@ -66,6 +81,7 @@ class MessageArchiveTests(unittest.TestCase):
         self.assertIsNotNone(self.store.get(1)["deleted_at"])
 
     def test_known_deletion_marks_text_and_media(self):
+        self.store.allow(-1, "test")
         self.store.capture_new(-1, 5, 91, "было", "channel")
         self.store.save(-1, 5, 91, "photo", "-1/5.jpg", 123)
         self.assertEqual(self.store.marked_deleted(-1, [5]), 2)
@@ -112,12 +128,15 @@ class MessageArchiveTests(unittest.TestCase):
         self.assertEqual(self.store.get_message(1)["text"], "hello")
 
     def test_separate_chats_same_message_id(self):
+        self.store.allow(-1, "test")
+        self.store.allow(-2, "test")
         self.store.capture_new(-1, 5, None, "one", "channel")
         self.store.capture_new(-2, 5, None, "two", "channel")
         self.store.marked_deleted(-1, [5])
         self.assertEqual(self.store.get_message(2)["telegram_deleted"], 0)
 
     def test_pagination_deleted(self):
+        self.store.allow(-1, "test")
         for n in range(1, 16):
             self.store.capture_new(-1, n, None, str(n), "channel")
             self.store.marked_deleted(-1, [n])
