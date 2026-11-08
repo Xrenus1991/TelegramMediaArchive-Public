@@ -171,6 +171,13 @@ class Store:
         )
         return bool(cur.rowcount)
 
+    def can_archive(self, chat_id: int) -> bool:
+        """Check current consent and pause state, including during long downloads."""
+        state = self.bot_group_state(chat_id)
+        return state not in ("paused", "left") and (
+            self.is_allowed(chat_id) or state == "active"
+        )
+
     def bot_group_active(self, chat_id: int) -> bool:
         return self.bot_group_state(chat_id) == "active"
 

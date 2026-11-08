@@ -105,6 +105,11 @@ async def run():
                         path.unlink(missing_ok=True)
                         db.ignore(chat_id, message.id, "download exceeds file limit")
                         return
+                    # Consent may have been withdrawn while Telegram was downloading.
+                    if not db.can_archive(chat_id):
+                        path.unlink(missing_ok=True)
+                        LOG.info("Discarded downloaded media after archival permission changed: chat=%s", chat_id)
+                        return
                     db.save(chat_id, message.id, message.sender_id, kind,
                             str(path.relative_to(media_root)), actual_size)
                     LOG.info("Saved %s: chat=%s message=%s bytes=%s",
